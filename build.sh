@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 API_DIR=${PUMPKIN_API_DIR:-"$SCRIPT_DIR/../pumpkin-api"}
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 if [ ! -r "$API_DIR/lib/libpumpkin-api.a" ]; then
     printf 'Cannot read API archive: %s/lib/libpumpkin-api.a\n' "$API_DIR" >&2
     exit 1
