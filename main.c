@@ -1,5 +1,5 @@
 #include "pumpkin_api.h"
-#include <stdio.h>
+
 // Plugin metadata
 static const char *authors[] = {"Zerorifter"};
 static const char *permissions[] = {"slashnv:nv"};
