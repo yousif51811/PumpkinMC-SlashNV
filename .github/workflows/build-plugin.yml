@@ -1,0 +1,121 @@
+name: Build and publish plugin
+
+on:
+    push:
+        branches:
+            - "**"
+    release:
+        types: [published]
+
+permissions:
+    contents: read
+
+jobs:
+    build_plugin:
+        name: Build plugin
+        runs-on: ubuntu-26.04
+        outputs:
+            plugin_version: ${{ steps.plugin_version.outputs.version }}
+            signing_key_available: ${{ steps.signing_key.outputs.available }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v7
+
+            - name: Install WASI SDK
+              run: |
+                  curl -fsSL --retry 3 \
+                      https://github.com/WebAssembly/wasi-sdk/releases/download/wasi-sdk-34/wasi-sdk-34.0-x86_64-linux.tar.gz \
+                      -o "$RUNNER_TEMP/wasi-sdk.tar.gz"
+                  mkdir -p "$RUNNER_TEMP/wasi-sdk"
+                  tar -xzf "$RUNNER_TEMP/wasi-sdk.tar.gz" \
+                      -C "$RUNNER_TEMP/wasi-sdk" --strip-components=1
+                  echo "$RUNNER_TEMP/wasi-sdk/bin" >> "$GITHUB_PATH"
+
+            - name: Build plugin
+              env:
+                  PUMPKIN_API_DIR: ${{ runner.temp }}/pumpkin-api
+              run: |
+                  curl -fsSL --retry 3 \
+                      https://github.com/Pumpkin-MC/pumpkin-api-c/releases/download/v0.1.1/pumpkin-api-c-0.1.1.tar.xz \
+                      -o "$RUNNER_TEMP/pumpkin-api.tar.xz"
+                  mkdir -p "$PUMPKIN_API_DIR"
+                  tar -xJf "$RUNNER_TEMP/pumpkin-api.tar.xz" \
+                      -C "$PUMPKIN_API_DIR" --strip-components=1
+                  chmod +x ./build.sh
+                  ./build.sh
+
+            - name: Resolve plugin version
+              id: plugin_version
+              shell: bash
+              run: |
+                  plugin_version="$(sed -n 's/.*\.version = "\([^"]*\)".*/\1/p' main.c)"
+                  if [[ -z "$plugin_version" ]]; then
+                      echo "::error::Could not read plugin version from main.c."
+                      exit 1
+                  fi
+                  if [[ "$GITHUB_EVENT_NAME" == 'release' ]]; then
+                      release_version="${GITHUB_REF_NAME#v}"
+                      if [[ "$release_version" != "$plugin_version" ]]; then
+                          echo "::error::Release tag '$GITHUB_REF_NAME' must match the plugin version '$plugin_version' in main.c."
+                          exit 1
+                      fi
+                  fi
+                  printf 'version=%s\n' "$plugin_version" >> "$GITHUB_OUTPUT"
+
+            - name: Check signing key availability
+              id: signing_key
+              shell: bash
+              env:
+                  PLUGIN_SIGNING_KEY: ${{ secrets.PLUGIN_SIGNING_KEY }}
+              run: |
+                  if [[ -n "$PLUGIN_SIGNING_KEY" ]]; then
+                      printf 'available=true\n' >> "$GITHUB_OUTPUT"
+                  else
+                      printf 'available=false\n' >> "$GITHUB_OUTPUT"
+                  fi
+
+            - name: Sign plugin
+              uses: filiphsps/pumpkin-plugins/actions/sign-pumpkin-plugin@sign-pumpkin-plugin-v0.0.3
+              with:
+                  plugin-name: /nv
+                  version: ${{ steps.plugin_version.outputs.version }}
+                  wasm-file: SlashNV.wasm
+                  developer-name: ${{ github.repository_owner }}
+                  signing-key: ${{ secrets.PLUGIN_SIGNING_KEY }}
+                  warn: true
+
+            - name: Verify signed plugin
+              if: steps.signing_key.outputs.available == 'true'
+              uses: filiphsps/pumpkin-plugins/actions/verify-pumpkin-plugin@verify-pumpkin-plugin-v0.0.2
+              with:
+                  plugin-name: /nv
+                  version: ${{ steps.plugin_version.outputs.version }}
+                  wasm-file: SlashNV.wasm
+
+            - name: Upload built plugin artifact
+              uses: actions/upload-artifact@v7
+              with:
+                  name: SlashNV-plugin
+                  path: SlashNV.wasm
+                  if-no-files-found: error
+
+    publish_plugin:
+        name: Publish plugin to Pumpkin Market
+        if: github.event_name == 'release' && needs.build_plugin.outputs.signing_key_available == 'true'
+        needs: build_plugin
+        runs-on: ubuntu-26.04
+        steps:
+            - name: Download signed plugin artifact
+              uses: actions/download-artifact@v8
+              with:
+                  name: SlashNV-plugin
+                  path: dist
+
+            - name: Publish release to Pumpkin Market
+              uses: filiphsps/pumpkin-plugins/actions/publish-to-pumpkin-market@publish-to-pumpkin-market-v0.0.4
+              with:
+                  plugin-name: /nv
+                  version: ${{ needs.build_plugin.outputs.plugin_version }}
+                  wasm-file: dist/SlashNV.wasm
+                  api-token: ${{ secrets.MARKET_API_TOKEN }}
+                  release-notes: ${{ github.event.release.body }}
