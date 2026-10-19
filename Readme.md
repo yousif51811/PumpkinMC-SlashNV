@@ -1,5 +1,5 @@
 # /nv
-An incredibly lightweight PumpkinMC plugin to toggle nightvision for the player.
+An incredibly lightweight PumpkinMC plugin to toggle night vision for the player.
 
 ## Permissions
 
