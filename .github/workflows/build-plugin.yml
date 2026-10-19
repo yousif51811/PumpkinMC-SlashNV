@@ -77,7 +77,7 @@ jobs:
             - name: Sign plugin
               uses: filiphsps/pumpkin-plugins/actions/sign-pumpkin-plugin@sign-pumpkin-plugin-v0.0.3
               with:
-                  plugin-name: /nv
+                  plugin-id: 116
                   version: ${{ steps.plugin_version.outputs.version }}
                   wasm-file: SlashNV.wasm
                   developer-name: ${{ github.repository_owner }}
