@@ -88,7 +88,7 @@ jobs:
               if: steps.signing_key.outputs.available == 'true'
               uses: filiphsps/pumpkin-plugins/actions/verify-pumpkin-plugin@verify-pumpkin-plugin-v0.0.2
               with:
-                  plugin-name: /nv
+                  plugin-name: /Nightvision
                   version: ${{ steps.plugin_version.outputs.version }}
                   wasm-file: SlashNV.wasm
 
@@ -114,7 +114,7 @@ jobs:
             - name: Publish release to Pumpkin Market
               uses: filiphsps/pumpkin-plugins/actions/publish-to-pumpkin-market@publish-to-pumpkin-market-v0.0.4
               with:
-                  plugin-name: /nv
+                  plugin-name: /Nightvision
                   version: ${{ needs.build_plugin.outputs.plugin_version }}
                   wasm-file: dist/SlashNV.wasm
                   api-token: ${{ secrets.MARKET_API_TOKEN }}
