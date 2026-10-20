@@ -1,5 +1,18 @@
-# /nv
+<p align="center">
+  <img src="./Assets/icon.png" width="120">
+</p>
+
+<h1 align="center">/NightVision</h1>
+
+<a href="https://market.pumpkinmc.org/plugin/116" title="PumpkinMC: Marketplace">
+  <img src="https://www.freewebtools.com/api/badge/PumpkinMC-Marketplace-fe7d37.svg?style=flat&labelColor=555" alt="PumpkinMC: Marketplace" decoding="async" loading="lazy">
+</a>
+
 An incredibly lightweight PumpkinMC plugin to toggle night vision for the player.
+
+<div align="left">
+    <img src="./Assets/showcase.gif">
+</div>
 
 ## Permissions
 
