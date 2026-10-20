@@ -10,7 +10,7 @@
 
 An incredibly lightweight PumpkinMC plugin to toggle night vision for the player.
 
-<div align="left">
+<div align="center">
     <img src="./Assets/showcase.gif">
 </div>
 
