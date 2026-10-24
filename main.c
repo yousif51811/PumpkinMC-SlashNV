@@ -6,7 +6,7 @@ static const char *authors[] = {"Zerorifter"};
 static pumpkin_metadata_t get_meta(void) {
     return (pumpkin_metadata_t) {
         .name = "slashnv",
-        .version = "0.2.0",
+        .version = "0.3.0",
         .authors = authors,
         .authors_count = sizeof(authors) / sizeof(authors[0]),
         .description = "A simple plugin to add a nightvision command",
@@ -81,7 +81,7 @@ static void reapply_night_vision(plugin_own_server_instance_t server) {
         pumpkin_plugin_player_player_drop_own(players.ptr[i]);
     }
     pumpkin_plugin_server_list_own_player_free(&players);
-
+    pumpkin_plugin_server_server_drop_own(server);
 }
 
 // Handle the nightvision command
